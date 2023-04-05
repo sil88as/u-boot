@@ -551,7 +551,7 @@ pack_uboot_image()
 	# Check file size
 	UBOOT_KB=`ls -l u-boot.bin | awk '{print $5}'`
 	if [ "$PLATFORM_UBOOT_IMG_SIZE" = "" ]; then
-		UBOOT_MAX_KB=1046528
+		UBOOT_MAX_KB=1050782
 	else
 		UBOOT_MAX_KB=`echo $PLATFORM_UBOOT_IMG_SIZE | awk '{print strtonum($2)}'`
 		UBOOT_MAX_KB=$(((UBOOT_MAX_KB-HEAD_KB)*1024))
