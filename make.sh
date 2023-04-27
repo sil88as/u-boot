@@ -208,31 +208,41 @@ prepare()
 
 select_toolchain()
 {
-	local absolute_path
-
-	if grep  -q '^CONFIG_ARM64=y' ${OUTDIR}/.config ; then
-		if [ -d ${TOOLCHAIN_ARM64} ]; then
-			absolute_path=$(cd `dirname ${TOOLCHAIN_ARM64}`; pwd)
-			TOOLCHAIN_GCC=${absolute_path}/bin/${GCC_ARM64}
-			TOOLCHAIN_OBJDUMP=${absolute_path}/bin/${OBJ_ARM64}
-			TOOLCHAIN_ADDR2LINE=${absolute_path}/bin/${ADDR2LINE_ARM64}
+	# If no outer CROSS_COMPILE, look for it from CC_FILE.
+	if [ "${ARG_COMPILE}" != "y" ]; then
+		if [ -f ${CC_FILE} ]; then
+			CROSS_COMPILE_ARM32=`cat ${CC_FILE}`
+			CROSS_COMPILE_ARM64=`cat ${CC_FILE}`
 		else
-			echo "Can't find toolchain: ${TOOLCHAIN_ARM64}"
-			exit 1
-		fi
-	else
-		if [ -d ${TOOLCHAIN_ARM32} ]; then
-			absolute_path=$(cd `dirname ${TOOLCHAIN_ARM32}`; pwd)
-			TOOLCHAIN_GCC=${absolute_path}/bin/${GCC_ARM32}
-			TOOLCHAIN_OBJDUMP=${absolute_path}/bin/${OBJ_ARM32}
-			TOOLCHAIN_ADDR2LINE=${absolute_path}/bin/${ADDR2LINE_ARM32}
-		else
-			echo "Can't find toolchain: ${TOOLCHAIN_ARM32}"
-			exit 1
+			if grep -q '^CONFIG_ARM64=y' .config ; then
+				CROSS_COMPILE_ARM64=$(cd `dirname ${CROSS_COMPILE_ARM64}`; pwd)"/aarch64-linux-gnu-"
+			else
+				CROSS_COMPILE_ARM32=$(cd `dirname ${CROSS_COMPILE_ARM32}`; pwd)"/arm-linux-gnueabihf-"
+			fi
 		fi
 	fi
 
-	# echo "toolchain: ${TOOLCHAIN_GCC}"
+	if grep -q '^CONFIG_ARM64=y' .config ; then
+		TOOLCHAIN=${CROSS_COMPILE_ARM64}
+		TOOLCHAIN_NM=${CROSS_COMPILE_ARM64}nm
+		TOOLCHAIN_OBJDUMP=${CROSS_COMPILE_ARM64}objdump
+		TOOLCHAIN_ADDR2LINE=${CROSS_COMPILE_ARM64}addr2line
+	else
+		TOOLCHAIN=${CROSS_COMPILE_ARM32}
+		TOOLCHAIN_NM=${CROSS_COMPILE_ARM32}nm
+		TOOLCHAIN_OBJDUMP=${CROSS_COMPILE_ARM32}objdump
+		TOOLCHAIN_ADDR2LINE=${CROSS_COMPILE_ARM32}addr2line
+	fi
+
+	if [ ! `which ${TOOLCHAIN}gcc` ]; then
+		echo "ERROR: No find ${TOOLCHAIN}gcc"
+		exit 1
+	fi
+
+	# save to CC_FILE
+	if [ "${ARG_COMPILE}" == "y" ]; then
+		echo "${TOOLCHAIN}" > ${CC_FILE}
+	fi
 }
 
 sub_commands()
