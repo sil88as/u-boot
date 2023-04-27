@@ -206,7 +206,7 @@ prepare()
 	fi
 }
 
-select_toolchain()
+function select_toolchain()
 {
 	local absolute_path
 
